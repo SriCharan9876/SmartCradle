@@ -1,0 +1,107 @@
+/* src/styles/statusCards.css */
+
+.status-grid {
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.status-card {
+  text-align: center;
+  padding: 1rem;
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.heade{
+  display: flex;
+  align-items: center;
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+  gap: 0.5rem;
+}
+
+.status-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+}
+
+.status-card .icon {
+  font-size: 2.2rem;
+  margin-bottom: 0.5rem;
+}
+
+.status-card h3 {
+  margin: 0.5rem 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.status-card .status {
+  margin-top: 0.25rem;
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+
+.status-card.normal {
+  border-top: 4px solid #2e7d32; /* green */
+}
+
+.status-card.detected {
+  border-top: 4px solid #c62828; /* red */
+}
+
+.status-card.waiting {
+  border-top: 4px solid #757575; /* gray */
+}
+
+.overall-anomaly-banner {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  font-weight: bold;
+  margin-bottom: 1rem;
+}
+
+.overall-anomaly-banner.detected {
+  background-color: #ffe0e0;
+  color: #b00020;
+}
+
+.overall-anomaly-banner.normal {
+  background-color: #e0ffe3;
+  color: #007f3d;
+}
+
+.overall-anomaly-banner .icon {
+  margin-right: 8px;
+  display: flex;
+  align-items: center;
+}
+
+.online-banner {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  font-weight: bold;
+  margin-bottom: 1rem;
+}
+
+.online-banner.online {
+  background-color: #e0ffe3;
+  color: #007f3d;
+}
+
+.online-banner.offline {
+  background-color: #ffe0e0;
+  color: #b00020;
+}
+
+.online-banner .icon {
+  margin-right: 8px;
+  display: flex;
+  align-items: center;
+}

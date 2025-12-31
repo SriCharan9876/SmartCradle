@@ -1,0 +1,60 @@
+{
+  "version": 1,
+  "author": "charan sri",
+  "editor": "wokwi",
+  "parts": [
+    { "type": "wokwi-breadboard-mini", "id": "bb1", "top": 56.2, "left": 199.2, "attrs": {} },
+    { "type": "board-esp32-devkit-c-v4", "id": "esp", "top": 201.6, "left": 225.64, "attrs": {} },
+    { "type": "dht11", "id": "dht", "top": 100, "left": 150, "attrs": {} },
+    { "type": "led", "id": "led", "top": 200, "left": 150, "attrs": { "color": "red" } },
+    { "type": "ky-037", "id": "sound", "top": 300, "left": 150, "attrs": {} },
+    {
+      "type": "wokwi-mpu6050",
+      "id": "imu1",
+      "top": 214.18,
+      "left": 415.72,
+      "rotate": 270,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-dht22",
+      "id": "dht1",
+      "top": 221.1,
+      "left": 513,
+      "attrs": { "temperature": "38.1", "humidity": "100" }
+    },
+    {
+      "type": "wokwi-slide-potentiometer",
+      "id": "pot1",
+      "top": 345.6,
+      "left": -58.4,
+      "rotate": 90,
+      "attrs": { "travelLength": "30" }
+    }
+  ],
+  "connections": [
+    [ "esp:TX", "$serialMonitor:RX", "", [] ],
+    [ "esp:RX", "$serialMonitor:TX", "", [] ],
+    [ "esp:4", "dht:SIGNAL", "blue", [ "v0" ] ],
+    [ "esp:3V3", "dht:VCC", "red", [ "v0" ] ],
+    [ "esp:GND", "dht:GND", "black", [ "v0" ] ],
+    [ "esp:2", "led:A", "yellow", [ "v0" ] ],
+    [ "esp:GND", "led:C", "black", [ "v0" ] ],
+    [ "esp:34", "sound:AO", "orange", [ "v0" ] ],
+    [ "esp:3V3", "sound:VCC", "red", [ "v0" ] ],
+    [ "esp:GND", "sound:GND", "black", [ "v0" ] ],
+    [ "esp:3V3", "bb1:1b.j", "green", [ "h-19.05", "v-57.6" ] ],
+    [ "esp:GND.2", "bb1:13b.j", "black", [ "v0" ] ],
+    [ "esp:21", "imu1:SDA", "green", [ "h57.6", "v-38.4", "h86.4" ] ],
+    [ "esp:22", "imu1:SCL", "green", [ "h48", "v-19.2", "h96" ] ],
+    [ "bb1:1b.i", "imu1:VCC", "red", [ "v0" ] ],
+    [ "imu1:GND", "bb1:13b.i", "black", [ "h-19.2", "v-57.68" ] ],
+    [ "dht1:GND", "bb1:13b.h", "black", [ "h28.8", "v-192" ] ],
+    [ "dht1:VCC", "bb1:1b.h", "red", [ "h-28.8", "v-192" ] ],
+    [ "dht1:SDA", "esp:4", "green", [ "v0" ] ],
+    [ "pot1:GND", "esp:CMD", "black", [ "h144", "v-81.2" ] ],
+    [ "pot1:VCC", "bb1:1b.g", "red", [ "v0" ] ],
+    [ "pot1:SIG", "esp:34", "green", [ "v0" ] ]
+  ],
+  "dependencies": {}
+}
