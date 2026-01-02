@@ -8,9 +8,22 @@ CREATE TABLE users (
   created_at TIMESTAMP DEFAULT NOW()
 );
 
+CREATE TABLE cradles (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+
+  cradle_name TEXT NOT NULL,
+  baby_name TEXT,
+  location TEXT,
+
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
 CREATE TABLE cradle_data (
   id BIGSERIAL PRIMARY KEY,
-  timestamp_unix BIGINT UNIQUE NOT NULL,
+
+  cradle_id UUID NOT NULL REFERENCES cradles(id) ON DELETE CASCADE,
+  timestamp_unix BIGINT NOT NULL,
 
   temperature REAL,
   humidity REAL,
@@ -32,5 +45,7 @@ CREATE TABLE cradle_data (
   anomaly_noise BOOLEAN,
   anomaly_overall BOOLEAN,
 
-  created_at TIMESTAMP DEFAULT NOW()
+  created_at TIMESTAMP DEFAULT NOW(),
+
+  UNIQUE (cradle_id, timestamp_unix)
 );
