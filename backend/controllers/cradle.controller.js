@@ -105,3 +105,20 @@ export async function updateCradle(req, res) {
 
   res.json(updatedCradle);
 }
+
+export async function deleteCradle(req, res) {
+  const { cradleId } = req.params;
+
+  // Note: ON DELETE CASCADE in schema ensures cradle_data and notifications are also deleted
+  const [deletedCradle] = await sql`
+    DELETE FROM cradles
+    WHERE id = ${cradleId} AND user_id = ${req.user.id}
+    RETURNING id
+  `;
+
+  if (!deletedCradle) {
+    return res.status(404).json({ error: "Cradle not found or unauthorized" });
+  }
+
+  res.json({ message: "Cradle deleted successfully", id: deletedCradle.id });
+}

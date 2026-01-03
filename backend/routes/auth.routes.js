@@ -1,5 +1,5 @@
 import express from "express";
-import { register, login, getMe, verifyEmail, googleLogin } from "../controllers/auth.controller.js";
+import { register, login, getMe, verifyEmail, googleLogin, updateProfile } from "../controllers/auth.controller.js";
 import { authUser } from "../middleware/authUser.js";
 import { upload } from "../config/cloudinary.js";
 
@@ -10,5 +10,6 @@ router.post("/google", googleLogin);
 router.post("/verify-email", upload.single('profileImage'), verifyEmail);
 router.post("/login", login);
 router.get("/me", authUser, getMe);
+router.put("/update", authUser, upload.single('profileImage'), updateProfile);
 
 export default router;

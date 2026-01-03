@@ -5,7 +5,8 @@ import {
   getLatestStatus,
   getHistory,
   createCradle,
-  updateCradle
+  updateCradle,
+  deleteCradle
 } from "../controllers/cradle.controller.js";
 
 const router = express.Router();
@@ -15,5 +16,6 @@ router.get("/", authUser, getCradles);
 router.get("/:cradleId/latest", authUser, getLatestStatus);
 router.get("/:cradleId/history", authUser, getHistory);
 router.put("/:cradleId", authUser, updateCradle);
+router.delete("/:cradleId", authUser, deleteCradle);
 
 export default router;

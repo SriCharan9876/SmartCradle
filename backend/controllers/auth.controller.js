@@ -190,3 +190,33 @@ export async function getMe(req, res) {
     res.status(500).json({ error: err.message });
   }
 }
+
+export async function updateProfile(req, res) {
+  const { display_name } = req.body;
+  const userId = req.user.id;
+  let photo_url = req.body.photo_url;
+
+  if (req.file) {
+    photo_url = req.file.path;
+  }
+
+  try {
+    const [updatedUser] = await sql`
+      UPDATE users
+      SET 
+        display_name = COALESCE(${display_name}, display_name),
+        photo_url = COALESCE(${photo_url}, photo_url)
+      WHERE id = ${userId}
+      RETURNING id, email, display_name, photo_url, provider, created_at
+    `;
+
+    if (!updatedUser) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    res.json({ message: "Profile updated successfully", user: updatedUser });
+  } catch (err) {
+    console.error("Update Profile Error:", err);
+    res.status(500).json({ error: err.message });
+  }
+}
