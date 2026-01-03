@@ -19,13 +19,21 @@ export async function getCradles(req, res) {
 
 export async function getLatestStatus(req, res) {
   const [row] = await sql`
-    SELECT cd.*, c.cradle_name, c.baby_name, c.location
-    FROM cradle_data cd
-    JOIN cradles c ON cd.cradle_id = c.id
-    WHERE cd.cradle_id = ${req.params.cradleId}
-    ORDER BY cd.created_at DESC
-    LIMIT 1
+    SELECT c.cradle_name, c.baby_name, c.location, cd.*
+    FROM cradles c
+    LEFT JOIN LATERAL (
+      SELECT *
+      FROM cradle_data
+      WHERE cradle_id = c.id
+      ORDER BY created_at DESC
+      LIMIT 1
+    ) cd ON true
+    WHERE c.id = ${req.params.cradleId}
   `;
+
+  if (!row) {
+    return res.status(404).json({ error: "Cradle not found" });
+  }
   res.json(row);
 }
 

@@ -16,7 +16,8 @@ app.use(cors({
   origin: [
     "http://localhost:5173",
     "https://smart-cradle-monitor.vercel.app",
-    "https://smartcradle.up.railway.app"
+    "https://smartcradle.up.railway.app",
+    "https://smartcradle.vercel.app"
   ]
 }));
 
