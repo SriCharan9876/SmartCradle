@@ -52,3 +52,11 @@ CREATE TABLE cradle_data (
 
   UNIQUE (cradle_id, boot_id, uptime_seconds)
 );
+
+CREATE TABLE user_otps (
+  id BIGSERIAL PRIMARY KEY,
+  email TEXT NOT NULL,
+  otp_code TEXT NOT NULL,
+  expires_at TIMESTAMP NOT NULL,
+  UNIQUE (email)
+);
