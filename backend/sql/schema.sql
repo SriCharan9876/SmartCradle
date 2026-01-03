@@ -60,3 +60,21 @@ CREATE TABLE user_otps (
   expires_at TIMESTAMP NOT NULL,
   UNIQUE (email)
 );
+
+CREATE TABLE notifications (
+  id BIGSERIAL PRIMARY KEY,
+
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  cradle_id UUID NOT NULL REFERENCES cradles(id) ON DELETE CASCADE,
+
+  -- classification
+  type TEXT NOT NULL,               -- 'ANOMALY' | 'INFO'
+  alert_key TEXT NOT NULL,          -- 'OVERALL', 'TEMP', 'MOTION'
+
+  title TEXT NOT NULL,
+  message TEXT NOT NULL,
+
+  is_read BOOLEAN DEFAULT FALSE,
+
+  created_at TIMESTAMP DEFAULT NOW()
+);

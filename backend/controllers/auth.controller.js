@@ -45,7 +45,12 @@ export async function register(req, res) {
 }
 
 export async function verifyEmail(req, res) {
-  const { email, otp, password, display_name, photo_url } = req.body;
+  const { email, otp, password, display_name } = req.body;
+  let photo_url = req.body.photo_url;
+
+  if (req.file) {
+    photo_url = req.file.path;
+  }
 
   try {
     const [record] = await sql`
@@ -71,7 +76,7 @@ export async function verifyEmail(req, res) {
     const [newUser] = await sql`
       INSERT INTO users (email, password, display_name, photo_url)
       VALUES (${email}, ${hashed}, ${display_name}, ${photo_url})
-      RETURNING id, email
+      RETURNING id, email, display_name, photo_url
     `;
 
     // Clean up OTP
@@ -84,7 +89,7 @@ export async function verifyEmail(req, res) {
       { expiresIn: "7d" }
     );
 
-    res.json({ token, message: "Verification successful" });
+    res.json({ token, message: "Verification successful", user: newUser });
 
   } catch (err) {
     if (err.code === "23505") { // Unique violation in users table
@@ -127,7 +132,6 @@ export async function googleLogin(req, res) {
   const { token } = req.body;
 
   try {
-    console.log(process.env.GOOGLE_CLIENT_ID);
     const ticket = await client.verifyIdToken({
       idToken: token,
       audience: process.env.GOOGLE_CLIENT_ID,
