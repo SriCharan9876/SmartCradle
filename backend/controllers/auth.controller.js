@@ -45,3 +45,21 @@ export async function login(req, res) {
 
   res.json({ token });
 }
+
+export async function getMe(req, res) {
+  try {
+    const [user] = await sql`
+      SELECT id, email, display_name, photo_url, created_at, provider
+      FROM users
+      WHERE id = ${req.user.id}
+    `;
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    res.json(user);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+}

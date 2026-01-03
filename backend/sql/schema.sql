@@ -9,12 +9,14 @@ CREATE TABLE users (
 );
 
 CREATE TABLE cradles (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
 
   cradle_name TEXT NOT NULL,
   baby_name TEXT,
   location TEXT,
+
+  device_key TEXT UNIQUE NOT NULL,
 
   created_at TIMESTAMP DEFAULT NOW()
 );
@@ -23,7 +25,8 @@ CREATE TABLE cradle_data (
   id BIGSERIAL PRIMARY KEY,
 
   cradle_id UUID NOT NULL REFERENCES cradles(id) ON DELETE CASCADE,
-  timestamp_unix BIGINT NOT NULL,
+  boot_id TEXT NOT NULL,
+  uptime_seconds BIGINT NOT NULL,
 
   temperature REAL,
   humidity REAL,
@@ -47,5 +50,5 @@ CREATE TABLE cradle_data (
 
   created_at TIMESTAMP DEFAULT NOW(),
 
-  UNIQUE (cradle_id, timestamp_unix)
+  UNIQUE (cradle_id, boot_id, uptime_seconds)
 );

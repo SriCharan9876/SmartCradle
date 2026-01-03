@@ -7,7 +7,7 @@ export async function ingestLog(req, res) {
   try {
     await sql`
       INSERT INTO cradle_data (
-        cradle_id, timestamp_unix,
+        cradle_id, boot_id, uptime_seconds,
         temperature, humidity, sound_level,
         motion_state,
         acc_x, acc_y, acc_z,
@@ -15,7 +15,7 @@ export async function ingestLog(req, res) {
         anomaly_temperature, anomaly_humidity,
         anomaly_motion, anomaly_noise, anomaly_overall
       ) VALUES (
-        ${cradleId}, ${data.timestamp_unix},
+        ${cradleId}, ${data.boot_id}, ${data.uptime_seconds},
         ${data.temperature}, ${data.humidity}, ${data.sound_level},
         ${data.motion_state},
         ${data.acc_x}, ${data.acc_y}, ${data.acc_z},
