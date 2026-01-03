@@ -38,8 +38,12 @@ export default function Profile() {
                 <div className="absolute top-0 right-0 p-32 bg-emerald-500/10 blur-[100px] rounded-full pointer-events-none"></div>
 
                 <div className="flex flex-col md:flex-row gap-8 items-center relative z-10">
-                    <div className="w-24 h-24 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center shadow-lg shadow-emerald-500/20">
-                        <User size={40} className="text-white" />
+                    <div className="w-24 h-24 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center shadow-lg shadow-emerald-500/20 overflow-hidden relative">
+                        {user?.photo_url ? (
+                            <img src={user.photo_url} alt="Profile" className="w-full h-full object-cover" />
+                        ) : (
+                            <User size={40} className="text-white" />
+                        )}
                     </div>
 
                     <div className="flex-1 text-center md:text-left space-y-1">

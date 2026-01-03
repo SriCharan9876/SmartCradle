@@ -9,6 +9,7 @@ export default function Register() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [otp, setOtp] = useState("");
+  const [profileImage, setProfileImage] = useState(null);
   const [step, setStep] = useState(1); // 1: Details, 2: OTP
   const [error, setError] = useState("");
   const navigate = useNavigate();
@@ -31,9 +32,18 @@ export default function Register() {
     e.preventDefault();
     setError("");
     try {
+      const formData = new FormData();
+      formData.append("email", email);
+      formData.append("otp", otp);
+      formData.append("password", password);
+      formData.append("display_name", display_name);
+      if (profileImage) {
+        formData.append("profileImage", profileImage);
+      }
+
       const { token } = await apiFetch("/api/auth/verify-email", {
         method: "POST",
-        body: JSON.stringify({ email, otp, password, display_name }),
+        body: formData,
       });
       localStorage.setItem("token", token);
       navigate("/");
@@ -81,6 +91,26 @@ export default function Register() {
 
           {step === 1 ? (
             <form onSubmit={handleRegister} className="space-y-6">
+              <div className="flex flex-col items-center mb-6">
+                <div className="w-24 h-24 rounded-full bg-slate-100 border-2 border-dashed border-slate-300 flex items-center justify-center relative overflow-hidden group hover:border-teal-500 transition-colors cursor-pointer">
+                  {profileImage ? (
+                    <img
+                      src={URL.createObjectURL(profileImage)}
+                      alt="Profile"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-slate-400 text-xs text-center px-2">Upload Photo</span>
+                  )}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => setProfileImage(e.target.files[0])}
+                    className="absolute inset-0 opacity-0 cursor-pointer"
+                  />
+                </div>
+              </div>
+
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Full Name</label>
                 <input

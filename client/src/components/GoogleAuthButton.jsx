@@ -32,10 +32,9 @@ export default function GoogleAuthButton({ text = "Sign in with Google" }) {
             <GoogleLogin
                 onSuccess={handleSuccess}
                 onError={handleError}
-                useOneTap
                 theme="outline"
                 size="large"
-                width="100%"
+                width={300}
                 text={text}
                 shape="pill"
             />

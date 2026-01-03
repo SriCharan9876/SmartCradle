@@ -7,6 +7,7 @@ import Dashboard from "./pages/Dashboard";
 import Cradle from "./pages/Cradle";
 import History from "./pages/History";
 import Analytics from "./pages/Analytics";
+import Notifications from "./pages/Notifications";
 import Profile from "./pages/Profile";
 
 function Private({ children }) {
@@ -32,6 +33,7 @@ export default function App() {
           <Route path="/cradle/:id/history" element={<Private><Layout><History /></Layout></Private>} />
           <Route path="/cradle/:id/analytics" element={<Private><Layout><Analytics /></Layout></Private>} />
           <Route path="/profile" element={<Private><Layout><Profile /></Layout></Private>} />
+          <Route path="/notifications" element={<Private><Layout><Notifications /></Layout></Private>} />
 
           <Route path="*" element={<Navigate to="/login" />} />
         </Routes>
