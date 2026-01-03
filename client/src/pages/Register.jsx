@@ -2,21 +2,41 @@ import { useState } from "react";
 import { apiFetch } from "../services/api";
 import { useNavigate, Link } from "react-router-dom";
 
+import GoogleAuthButton from "../components/GoogleAuthButton";
+
 export default function Register() {
   const [display_name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [otp, setOtp] = useState("");
+  const [step, setStep] = useState(1); // 1: Details, 2: OTP
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
   async function handleRegister(e) {
     e.preventDefault();
+    setError("");
     try {
       await apiFetch("/api/auth/register", {
         method: "POST",
-        body: JSON.stringify({ display_name, email, password }),
+        body: JSON.stringify({ email }),
       });
-      navigate("/login");
+      setStep(2);
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
+  async function handleVerifyOtp(e) {
+    e.preventDefault();
+    setError("");
+    try {
+      const { token } = await apiFetch("/api/auth/verify-email", {
+        method: "POST",
+        body: JSON.stringify({ email, otp, password, display_name }),
+      });
+      localStorage.setItem("token", token);
+      navigate("/");
     } catch (err) {
       setError(err.message);
     }
@@ -34,7 +54,9 @@ export default function Register() {
         <div className="relative z-10 p-12 text-white max-w-lg">
           <h1 className="text-5xl font-bold mb-6">Join Smart Cradle</h1>
           <p className="text-lg text-slate-300">
-            Create an account to start monitoring your child's safety with advanced AI analytics.
+            {step === 1
+              ? "Create an account to start monitoring your child's safety with advanced AI analytics."
+              : "Verify your email to complete the registration process."}
           </p>
         </div>
       </div>
@@ -43,8 +65,12 @@ export default function Register() {
       <div className="w-full lg:w-1/2 flex items-center justify-center bg-white p-8">
         <div className="w-full max-w-md space-y-8">
           <div className="text-center">
-            <h2 className="text-3xl font-bold text-slate-900">Create Account</h2>
-            <p className="mt-2 text-slate-600">Join us to get started</p>
+            <h2 className="text-3xl font-bold text-slate-900">
+              {step === 1 ? "Create Account" : "Verify Email"}
+            </h2>
+            <p className="mt-2 text-slate-600">
+              {step === 1 ? "Join us to get started" : `Enter the OTP sent to ${email}`}
+            </p>
           </div>
 
           {error && (
@@ -53,46 +79,88 @@ export default function Register() {
             </div>
           )}
 
-          <form onSubmit={handleRegister} className="space-y-6">
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Full Name</label>
-              <input
-                className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all outline-none bg-white text-slate-900"
-                placeholder="John Doe"
-                value={display_name}
-                onChange={(e) => setName(e.target.value)}
-                required
-              />
-            </div>
+          {step === 1 ? (
+            <form onSubmit={handleRegister} className="space-y-6">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Full Name</label>
+                <input
+                  className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all outline-none bg-white text-slate-900"
+                  placeholder="John Doe"
+                  value={display_name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
+                />
+              </div>
 
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
-              <input
-                className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all outline-none bg-white text-slate-900"
-                placeholder="you@example.com"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
+                <input
+                  className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all outline-none bg-white text-slate-900"
+                  placeholder="you@example.com"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+              </div>
 
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Password</label>
-              <input
-                className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all outline-none bg-white text-slate-900"
-                type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-            </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Password</label>
+                <input
+                  className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all outline-none bg-white text-slate-900"
+                  type="password"
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+              </div>
 
-            <button className="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 rounded-lg shadow-sm hover:shadow-lg transition-all transform hover:-translate-y-0.5">
-              Register
-            </button>
-          </form>
+              <button className="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 rounded-lg shadow-sm hover:shadow-lg transition-all transform hover:-translate-y-0.5">
+                Register
+              </button>
+            </form>
+          ) : (
+            <form onSubmit={handleVerifyOtp} className="space-y-6">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">One-Time Password</label>
+                <input
+                  className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all outline-none bg-white text-slate-900 text-center tracking-widest text-2xl"
+                  placeholder="000000"
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value)}
+                  maxLength={6}
+                  required
+                />
+              </div>
+
+              <button className="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 rounded-lg shadow-sm hover:shadow-lg transition-all transform hover:-translate-y-0.5">
+                Verify & Login
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setStep(1)}
+                className="w-full text-slate-500 hover:text-slate-700 text-sm font-medium"
+              >
+                Change Email
+              </button>
+            </form>
+          )}
+
+          {step === 1 && (
+            <>
+              <div className="relative my-6">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-gray-300"></div>
+                </div>
+                <div className="relative flex justify-center text-sm">
+                  <span className="px-2 bg-white text-gray-500">Or join with</span>
+                </div>
+              </div>
+              <GoogleAuthButton text="Sign up with Google" />
+            </>
+          )}
 
           <div className="text-center text-sm text-slate-500">
             Already have an account?{" "}
