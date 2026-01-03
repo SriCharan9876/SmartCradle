@@ -1,0 +1,48 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    :root {
+        /* Brand Colors - Teal */
+        --color-primary: #0f766e;
+        /* teal-700 */
+        --color-primary-light: #2dd4bf;
+        /* teal-400 */
+        --color-primary-dark: #115e59;
+        /* teal-800 */
+        --color-primary-foreground: #ffffff;
+
+        /* Secondary Colors - Slate */
+        --color-secondary: #334155;
+        /* slate-700 */
+        --color-secondary-foreground: #ffffff;
+
+        /* Background & Surface */
+        --color-background: #f1f5f9;
+        /* slate-100 */
+        --color-surface: #ffffff;
+        --color-surface-hover: #f8fafc;
+        /* slate-50 */
+
+        /* Text Colors */
+        --color-text-main: #0f172a;
+        /* slate-900 */
+        --color-text-muted: #64748b;
+        /* slate-500 */
+        --color-text-inverted: #ffffff;
+
+        /* Border & UI Elements */
+        --color-border: #e2e8f0;
+        /* slate-200 */
+        --color-input: #ffffff;
+        --color-ring: #14b8a6;
+        /* teal-500 */
+
+        /* Feedback */
+        --color-error: #ef4444;
+        /* red-500 */
+        --color-error-bg: #fef2f2;
+        /* red-50 */
+    }
+}
