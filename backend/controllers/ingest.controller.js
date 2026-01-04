@@ -100,7 +100,7 @@ export async function ingestLog(req, res) {
             message: detailedMessage
           };
           const response = await axios.post(
-            "https://ramuabsn.app.n8n.cloud/webhook/39c231f8-d190-4449-96c9-c80330adb5a9",
+            "https://ramuabsn.app.n8n.cloud/webhook-test/39c231f8-d190-4449-96c9-c80330adb5a9",
             payload,
             {
               headers: {
