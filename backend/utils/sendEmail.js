@@ -12,6 +12,7 @@ export async function sendEmail(to, subject, html) {
             pass: process.env.EMAIL_PASS,
         },
         connectionTimeout: 10000, // 10 seconds
+        family: 4, // Force IPv4
     });
 
     try {
