@@ -27,7 +27,6 @@ export async function ingestLog(req, res) {
         ${data.anomaly_overall}
       )
     `;
-    res.json({ status: "ok" });
 
     // Check for anomalies and trigger notification if needed
     // We need to check if we just crossed the threshold of > 5 continuous anomalies.
@@ -104,7 +103,7 @@ export async function ingestLog(req, res) {
       }
     }
 
-    
+    res.json({ status: "ok" });
   } catch (err) {
     if (err.code === "23505") {
       return res.status(409).json({ error: "Duplicate timestamp" });
