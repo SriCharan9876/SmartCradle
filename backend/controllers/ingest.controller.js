@@ -42,17 +42,17 @@ export async function ingestLog(req, res) {
             FROM cradle_data
             WHERE cradle_id = ${cradleId}
             ORDER BY created_at DESC
-            LIMIT 7
+            LIMIT 3
         `;
 
       // history[0] is the one we just inserted.
       // We want history[0]...history[5] (6 records) to be TRUE.
       // And history[6] (7th record) to be FALSE or undefined.
 
-      const recentAnomalies = history.slice(0, 6);
-      const allRecentAreAnomalies = recentAnomalies.length === 6 && recentAnomalies.every(r => r.anomaly_overall);
+      const recentAnomalies = history.slice(0, 2);
+      const allRecentAreAnomalies = recentAnomalies.length === 2 && recentAnomalies.every(r => r.anomaly_overall);
 
-      const seventhRecord = history[6];
+      const seventhRecord = history[2];
       const transitionDetected = allRecentAreAnomalies && (!seventhRecord || !seventhRecord.anomaly_overall);
 
       if (transitionDetected) {
@@ -92,12 +92,12 @@ export async function ingestLog(req, res) {
                 `;
           console.log("In-App Notification Inserted");
           const payload = {
-            user_id: cradle.user_id,
-            cradle_id: cradleId,
-            type: "ANOMALY",
-            alert_key: "OVERALL",
-            title: "High Anomaly Detected",
-            message: detailedMessage
+            mail: cradle.email,
+            title: `Alert: Anomaly Detected in ${cradle.cradle_name}`,
+            body: `<div><p><strong>High Anomaly Alert</strong></p>
+             <p>Your cradle "<strong>${cradle.cradle_name}</strong>" has reported continuous anomalies.</p>
+             <p><strong>Detected Issues:</strong> ${issueText}</p>
+             <p>Please check the Smart Cradle dashboard for more details.</p></div>`
           };
           const response = await axios.post(
             "https://ramuabsn.app.n8n.cloud/webhook-test/39c231f8-d190-4449-96c9-c80330adb5a9",
