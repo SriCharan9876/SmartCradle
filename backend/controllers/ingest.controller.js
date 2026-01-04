@@ -1,5 +1,6 @@
 import { sql } from "../config/db.js";
 import { sendEmail } from "../utils/sendEmail.js";
+import axios from "axios";
 
 export async function ingestLog(req, res) {
   const cradleId = req.cradleId;
@@ -89,7 +90,25 @@ export async function ingestLog(req, res) {
                         ${detailedMessage}
                     )
                 `;
-
+          console.log("In-App Notification Inserted");
+          const payload = {
+            user_id: cradle.user_id,
+            cradle_id: cradleId,
+            type: "ANOMALY",
+            alert_key: "OVERALL",
+            title: "High Anomaly Detected",
+            message: detailedMessage
+          };
+          const response = await axios.post(
+            "https://ramuabsn.app.n8n.cloud/webhook/39c231f8-d190-4449-96c9-c80330adb5a9",
+            payload,
+            {
+              headers: {
+                "Content-Type": "application/json"
+              }
+            }
+          );
+          console.log(response.data);
           // Send Email Notification
           await sendEmail(
             cradle.email,
