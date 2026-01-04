@@ -1,6 +1,5 @@
 import { sql } from "../config/db.js";
 import { sendEmail } from "../utils/sendEmail.js";
-import axios from "axios";
 
 export async function ingestLog(req, res) {
   const cradleId = req.cradleId;
@@ -117,7 +116,7 @@ export async function ingestLog(req, res) {
               </p>
 
               <div style="text-align: center; margin-top: 35px; margin-bottom: 35px;">
-                <a href="https://smart-cradle-monitor.vercel.app/dashboard" style="background-color: #d32f2f; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 16px; display: inline-block;">
+                <a href="https://smartcradle.vercel.app/dashboard" style="background-color: #d32f2f; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 16px; display: inline-block;">
                   View Live Dashboard
                 </a>
               </div>

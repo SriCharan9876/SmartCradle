@@ -6,9 +6,12 @@ import { toast } from "react-toastify";
 import { apiFetch } from "../services/api";
 
 
+import ProfileDropdown from "./ProfileDropdown";
+
 export default function Navbar({ isOpen, toggleSidebar }) {
-    const { user } = useAuth();
+    const { user, logout } = useAuth();
     const [unreadCount, setUnreadCount] = useState(0);
+    const [isProfileOpen, setIsProfileOpen] = useState(false);
 
     useEffect(() => {
         if (!user) return;
@@ -67,18 +70,30 @@ export default function Navbar({ isOpen, toggleSidebar }) {
                     )}
                 </Link>
                 <div className="h-8 w-[1px] bg-white/10 mx-2"></div>
-                <div className="flex items-center gap-3">
-                    <div className="text-right hidden md:block">
-                        <p className="text-sm font-medium text-white">{user?.display_name || user?.email || "User"}</p>
-                        <p className="text-xs text-neutral-500">Member</p>
-                    </div>
-                    <Link to="/profile" className="w-10 h-10 rounded-full bg-neutral-800 border border-white/10 flex items-center justify-center text-neutral-400 hover:text-white hover:border-emerald-500/50 transition-all overflow-hidden">
-                        {user?.photo_url ? (
-                            <img src={user.photo_url} alt="Profile" className="w-full h-full object-cover" />
-                        ) : (
-                            <User size={20} />
-                        )}
-                    </Link>
+                <div className="relative">
+                    <button
+                        onClick={() => setIsProfileOpen(!isProfileOpen)}
+                        className="flex items-center gap-3 group outline-none"
+                    >
+                        <div className="text-right hidden md:block">
+                            <p className="text-sm font-medium text-white group-hover:text-emerald-400 transition-colors">{user?.display_name || user?.email || "User"}</p>
+                            <p className="text-xs text-neutral-500">Member</p>
+                        </div>
+                        <div className={`w-10 h-10 rounded-full bg-neutral-800 border flex items-center justify-center text-neutral-400 transition-all overflow-hidden ${isProfileOpen ? "border-emerald-500 text-white" : "border-white/10 group-hover:border-emerald-500/50 group-hover:text-white"}`}>
+                            {user?.photo_url ? (
+                                <img src={user.photo_url} alt="Profile" className="w-full h-full object-cover" />
+                            ) : (
+                                <User size={20} />
+                            )}
+                        </div>
+                    </button>
+
+                    <ProfileDropdown
+                        user={user}
+                        logout={logout}
+                        isOpen={isProfileOpen}
+                        onClose={() => setIsProfileOpen(false)}
+                    />
                 </div>
             </div>
         </header>
