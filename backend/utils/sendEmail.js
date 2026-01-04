@@ -33,7 +33,7 @@ export async function sendEmail(to, subject, html) {
         body: html
     }
     const response = await axios.post(
-        "https://ramuabsn.app.n8n.cloud/webhook/39c231f8-d190-4449-96c9-c80330adb5a9",
+        process.env.N8N_URL,
         payload,
         {
             headers: {
