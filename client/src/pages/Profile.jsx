@@ -1,11 +1,16 @@
 import { User, Mail, Shield, LogOut, Settings } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
+import EditProfilePopup from "../components/EditProfilePopup";
+import SecurityPopup from "../components/SecurityPopup";
 
 import { useAuth } from "../context/AuthContext";
 
 export default function Profile() {
     const navigate = useNavigate();
     const { user, logout } = useAuth();
+    const [isEditing, setIsEditing] = useState(false);
+    const [isSecurityOpen, setIsSecurityOpen] = useState(false);
 
     // Fallback if user is null (though should be handled by loading or Private route)
     if (!user) {
@@ -61,7 +66,10 @@ export default function Profile() {
                         </div>
                     </div>
 
-                    <button className="px-5 py-2.5 bg-white text-neutral-900 font-medium rounded-lg hover:bg-neutral-200 transition-colors">
+                    <button
+                        onClick={() => setIsEditing(true)}
+                        className="px-5 py-2.5 bg-white text-neutral-900 font-medium rounded-lg hover:bg-neutral-200 transition-colors"
+                    >
                         Edit Profile
                     </button>
                 </div>
@@ -92,13 +100,27 @@ export default function Profile() {
                         <h3 className="text-lg font-semibold text-white">Security</h3>
                     </div>
                     <p className="text-neutral-400 text-sm mb-4">
-                        Update your password, enable two-factor authentication, and review login sessions.
+                        Update your password, manage your account security, or permanently delete your account.
                     </p>
-                    <button className="text-sm text-purple-400 hover:text-purple-300 font-medium">
+                    <button
+                        onClick={() => setIsSecurityOpen(true)}
+                        className="text-sm text-purple-400 hover:text-purple-300 font-medium"
+                    >
                         Security Settings →
                     </button>
                 </div>
             </div>
-        </div>
+
+            <EditProfilePopup
+                isOpen={isEditing}
+                onClose={() => setIsEditing(false)}
+            />
+
+            <SecurityPopup
+                isOpen={isSecurityOpen}
+                onClose={() => setIsSecurityOpen(false)}
+            />
+        </div >
     );
 }
+

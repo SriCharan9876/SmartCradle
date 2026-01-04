@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { X, Camera, Save, Loader } from "lucide-react";
+import { X, Camera, Save, Loader, Trash2 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { apiFetch } from "../services/api";
 
@@ -8,6 +8,7 @@ export default function EditProfilePopup({ isOpen, onClose }) {
     const [displayName, setDisplayName] = useState(user?.display_name || "");
     const [selectedImage, setSelectedImage] = useState(null);
     const [previewUrl, setPreviewUrl] = useState(user?.photo_url);
+    const [deletePhoto, setDeletePhoto] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const fileInputRef = useRef(null);
@@ -20,6 +21,7 @@ export default function EditProfilePopup({ isOpen, onClose }) {
             setSelectedImage(file);
             const objectUrl = URL.createObjectURL(file);
             setPreviewUrl(objectUrl);
+            setDeletePhoto(false);
         }
     };
 
@@ -31,28 +33,17 @@ export default function EditProfilePopup({ isOpen, onClose }) {
         try {
             const formData = new FormData();
             formData.append("display_name", displayName);
-            if (selectedImage) {
+
+            if (deletePhoto) {
+                formData.append("delete_photo", "true");
+            } else if (selectedImage) {
                 formData.append("profileImage", selectedImage);
             }
 
-            // We need to use fetch directly or ensure apiFetch handles FormData correctly. 
-            // apiFetch in services/api likely sets Content-Type to application/json automatically if not careful.
-            // Let's check apiFetch implementation or just use fetch with auth token.
-
-            const token = localStorage.getItem("token");
-            const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/auth/update`, {
+            await apiFetch("/api/auth/update", {
                 method: "PUT",
-                headers: {
-                    "Authorization": `Bearer ${token}`
-                    // Do NOT set Content-Type header when sending FormData, browsers set it automatically with boundary
-                },
                 body: formData
             });
-
-            if (!res.ok) {
-                const data = await res.json();
-                throw new Error(data.error || "Failed to update profile");
-            }
 
             await fetchUser();
             onClose();
@@ -109,7 +100,22 @@ export default function EditProfilePopup({ isOpen, onClose }) {
                             accept="image/*"
                             onChange={handleImageChange}
                         />
-                        <p className="text-sm text-neutral-400">Click to change profile picture</p>
+                        {previewUrl && (
+                            <button
+                                onClick={() => {
+                                    setPreviewUrl(null);
+                                    setSelectedImage(null);
+                                    setDeletePhoto(true);
+                                }}
+                                className="flex items-center gap-1.5 text-xs text-red-400 hover:text-red-300 transition-colors"
+                            >
+                                <Trash2 size={12} />
+                                Remove Photo
+                            </button>
+                        )}
+                        {!previewUrl && (
+                            <p className="text-sm text-neutral-400">Click to upload profile picture</p>
+                        )}
                     </div>
 
                     {/* Name Input */}

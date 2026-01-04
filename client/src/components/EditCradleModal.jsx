@@ -113,7 +113,7 @@ export default function EditCradleModal({ isOpen, onClose, onUpdated, cradle }) 
                             </label>
                             <div className="flex items-center gap-2 text-neutral-400 text-xs font-mono">
                                 <Key size={12} />
-                                {cradle.id}
+                                {cradle.device_key}
                             </div>
                         </div>
 
