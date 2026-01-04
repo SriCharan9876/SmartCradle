@@ -2,7 +2,7 @@ import { sql } from "../config/db.js";
 
 export async function getCradles(req, res) {
   const cradles = await sql`
-    SELECT c.id, c.cradle_name, c.location, c.baby_name, c.created_at,
+    SELECT c.id, c.cradle_name, c.location, c.baby_name, c.created_at, c.device_key,
            d.anomaly_overall
     FROM cradles c
     LEFT JOIN LATERAL (

@@ -1,4 +1,5 @@
 import { sql } from "../config/db.js";
+import { sendEmail } from "../utils/sendEmail.js";
 
 export async function ingestLog(req, res) {
   const cradleId = req.cradleId;
@@ -54,10 +55,28 @@ export async function ingestLog(req, res) {
       const transitionDetected = allRecentAreAnomalies && (!seventhRecord || !seventhRecord.anomaly_overall);
 
       if (transitionDetected) {
-        // Get user_id for this cradle
-        const [cradle] = await sql`SELECT user_id, cradle_name FROM cradles WHERE id = ${cradleId}`;
+        // Get user_id and email for this cradle
+        const [cradle] = await sql`
+          SELECT c.user_id, c.cradle_name, u.email 
+          FROM cradles c
+          JOIN users u ON c.user_id = u.id
+          WHERE c.id = ${cradleId}
+        `;
+
+        console.log(cradle);
 
         if (cradle) {
+          // Identify specific anomalies
+          const issues = [];
+          if (data.anomaly_temperature) issues.push("Temperature");
+          if (data.anomaly_humidity) issues.push("Humidity");
+          if (data.anomaly_motion) issues.push("Motion");
+          if (data.anomaly_noise) issues.push("Noise");
+
+          const issueText = issues.length > 0 ? issues.join(", ") : "General Anomaly";
+          const detailedMessage = `Cradle "${cradle.cradle_name}" report: ${issueText}. Continuous anomalies detected.`;
+
+          // In-App Notification
           await sql`
                     INSERT INTO notifications (
                         user_id, cradle_id, type, alert_key, title, message
@@ -67,9 +86,19 @@ export async function ingestLog(req, res) {
                         'ANOMALY', 
                         'OVERALL', 
                         'High Anomaly Detected',
-                        ${`Cradle "${cradle.cradle_name}" has reported continuous anomalies (>5).`}
+                        ${detailedMessage}
                     )
                 `;
+
+          // Send Email Notification
+          await sendEmail(
+            cradle.email,
+            `Alert: Anomaly Detected in ${cradle.cradle_name}`,
+            `<p><strong>High Anomaly Alert</strong></p>
+             <p>Your cradle "<strong>${cradle.cradle_name}</strong>" has reported continuous anomalies.</p>
+             <p><strong>Detected Issues:</strong> ${issueText}</p>
+             <p>Please check the Smart Cradle dashboard for more details.</p>`
+          );
         }
       }
     }

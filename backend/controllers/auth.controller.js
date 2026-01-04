@@ -192,23 +192,47 @@ export async function getMe(req, res) {
 }
 
 export async function updateProfile(req, res) {
-  const { display_name } = req.body;
+  const { display_name, delete_photo } = req.body;
   const userId = req.user.id;
-  let photo_url = req.body.photo_url;
+  let photo_url = req.body.photo_url; // If sent as string (e.g. current url, though we usually just ignore if not FILE)
 
+  // If file is uploaded, use its path
   if (req.file) {
     photo_url = req.file.path;
   }
+  // If delete_photo is true, explicitly set to NULL
+  else if (delete_photo === "true" || delete_photo === true) {
+    photo_url = null;
+  }
 
   try {
-    const [updatedUser] = await sql`
-      UPDATE users
-      SET 
-        display_name = COALESCE(${display_name}, display_name),
-        photo_url = COALESCE(${photo_url}, photo_url)
-      WHERE id = ${userId}
-      RETURNING id, email, display_name, photo_url, provider, created_at
-    `;
+    let query;
+    if (delete_photo === "true" || delete_photo === true) {
+      // Explicit deletion
+      [query] = await sql`
+            UPDATE users
+            SET 
+                display_name = COALESCE(${display_name}, display_name),
+                photo_url = NULL
+            WHERE id = ${userId}
+            RETURNING id, email, display_name, photo_url, provider, created_at
+        `;
+    } else {
+      // Update if new value provided (file), or keep existing if photo_url is undefined/null here
+      // Note: Logic above sets photo_url = file.path if file exists.
+      // If file doesn't exist, photo_url is undefined (from req.body.photo_url if not sent)
+
+      [query] = await sql`
+            UPDATE users
+            SET 
+                display_name = COALESCE(${display_name}, display_name),
+                photo_url = COALESCE(${photo_url}, photo_url)
+            WHERE id = ${userId}
+            RETURNING id, email, display_name, photo_url, provider, created_at
+        `;
+    }
+
+    const updatedUser = query;
 
     if (!updatedUser) {
       return res.status(404).json({ error: "User not found" });
@@ -217,6 +241,126 @@ export async function updateProfile(req, res) {
     res.json({ message: "Profile updated successfully", user: updatedUser });
   } catch (err) {
     console.error("Update Profile Error:", err);
+    res.status(500).json({ error: err.message });
+  }
+}
+
+export async function sendSecurityOTP(req, res) {
+  const email = req.user.email;
+
+  try {
+    const otp = generateOTP();
+    const expiresAt = new Date(Date.now() + 10 * 60000); // 10 minutes
+
+    const [userOtp] = await sql`
+      INSERT INTO user_otps (email, otp_code, expires_at)
+      VALUES (${email}, ${otp}, ${expiresAt})
+      ON CONFLICT (email)
+      DO UPDATE SET
+        otp_code = EXCLUDED.otp_code,
+        expires_at = EXCLUDED.expires_at
+      RETURNING *
+    `;
+
+    await sendEmail(
+      email,
+      "Smart Cradle - Security Verification",
+      `<p>Your security verification code is: <strong>${otp}</strong></p><p>This code expires in 10 minutes. Do not share this with anyone.</p>`
+    );
+
+    res.json({ message: "OTP sent to your email" });
+  } catch (err) {
+    console.error("Send Security OTP Error:", err);
+    res.status(500).json({ error: err.message });
+  }
+}
+
+export async function verifySecurityOTP(req, res) {
+  const { otp } = req.body;
+  const email = req.user.email;
+
+  try {
+    const [record] = await sql`
+      SELECT * FROM user_otps WHERE email = ${email}
+    `;
+
+    if (!record || record.otp_code !== otp) {
+      return res.status(400).json({ error: "Invalid OTP" });
+    }
+
+    if (new Date() > new Date(record.expires_at)) {
+      return res.status(400).json({ error: "OTP expired" });
+    }
+
+    // Generate Security Token (short lived)
+    const securityToken = jwt.sign(
+      { id: req.user.id, type: 'security_access' },
+      process.env.JWT_SECRET,
+      { expiresIn: "5m" }
+    );
+
+    // Clean up OTP
+    await sql`DELETE FROM user_otps WHERE email = ${email}`;
+
+    res.json({ securityToken, message: "Verification successful" });
+
+  } catch (err) {
+    console.error("Verify Security OTP Error:", err);
+    res.status(500).json({ error: err.message });
+  }
+}
+
+export async function changePassword(req, res) {
+  const { newPassword, securityToken } = req.body;
+  const userId = req.user.id;
+
+  try {
+    // Verify Security Token
+    try {
+      const decoded = jwt.verify(securityToken, process.env.JWT_SECRET);
+      if (decoded.id !== userId || decoded.type !== 'security_access') {
+        throw new Error("Invalid token scope");
+      }
+    } catch (e) {
+      return res.status(403).json({ error: "Invalid or expired security token. Please verify again." });
+    }
+
+    const hashed = await bcrypt.hash(newPassword, 10);
+
+    await sql`
+      UPDATE users
+      SET password = ${hashed}
+      WHERE id = ${userId}
+    `;
+
+    res.json({ message: "Password updated successfully" });
+
+  } catch (err) {
+    console.error("Change Password Error:", err);
+    res.status(500).json({ error: err.message });
+  }
+}
+
+export async function deleteAccount(req, res) {
+  const { securityToken } = req.body; // or headers
+  const userId = req.user.id;
+
+  try {
+    // Verify Security Token
+    try {
+      const decoded = jwt.verify(securityToken, process.env.JWT_SECRET);
+      if (decoded.id !== userId || decoded.type !== 'security_access') {
+        throw new Error("Invalid token scope");
+      }
+    } catch (e) {
+      return res.status(403).json({ error: "Invalid or expired security token. Please verify again." });
+    }
+
+    await sql`DELETE FROM users WHERE id = ${userId}`;
+
+    res.json({ message: "Account deleted successfully" });
+  } catch (err) {
+    console.error("Delete Account Error:", err);
     res.status(500).json({ error: err.message });
   }
 }
