@@ -69,7 +69,6 @@ CREATE TABLE notifications (
 
   -- classification
   type TEXT NOT NULL,               -- 'ANOMALY' | 'INFO'
-  alert_key TEXT NOT NULL,          -- 'OVERALL', 'TEMP', 'MOTION'
 
   title TEXT NOT NULL,
   message TEXT NOT NULL,

@@ -69,36 +69,70 @@ export async function ingestLog(req, res) {
         if (cradle) {
           // Identify specific anomalies
           const issues = [];
-          if (data.anomaly_temperature) issues.push("Temperature");
-          if (data.anomaly_humidity) issues.push("Humidity");
-          if (data.anomaly_motion) issues.push("Motion");
-          if (data.anomaly_noise) issues.push("Noise");
+          if (data.anomaly_temperature) issues.push("Abnormal Temperature");
+          if (data.anomaly_humidity) issues.push("Abnormal Humidity");
+          if (data.anomaly_motion) issues.push("Unusual Motion");
+          if (data.anomaly_noise) issues.push("Excessive Noise");
 
           const issueText = issues.length > 0 ? issues.join(", ") : "General Anomaly";
-          const detailedMessage = `Cradle "${cradle.cradle_name}" report: ${issueText}. Continuous anomalies detected.`;
+
+          // Refined message for the notification table
+          const notificationTitle = `Anomaly Alert: ${cradle.cradle_name}`;
+          const notificationMessage = `Critical anomalies detected: ${issueText}. Please check your cradle immediately.`;
 
           // In-App Notification
           await sql`
                     INSERT INTO notifications (
-                        user_id, cradle_id, type, alert_key, title, message
+                        user_id, cradle_id, type, title, message
                     ) VALUES (
                         ${cradle.user_id}, 
                         ${cradleId}, 
                         'ANOMALY', 
-                        'OVERALL', 
-                        'High Anomaly Detected',
-                        ${detailedMessage}
+                        ${notificationTitle},
+                        ${notificationMessage}
                     )
                 `;
-          // Send Email Notification
-          await sendEmail(
-            cradle.email,
-            `Alert: Anomaly Detected in ${cradle.cradle_name}`,
-            `<div><p><strong>High Anomaly Alert</strong></p>
-             <p>Your cradle "<strong>${cradle.cradle_name}</strong>" has reported continuous anomalies.</p>
-             <p><strong>Detected Issues:</strong> ${issueText}</p>
-             <p>Please check the Smart Cradle dashboard for more details.</p></div>`
-          );
+
+          // Send Email Notification - Professional HTML Template
+          const emailSubject = `[SmartCradle] Critical Aleart: Anomaly Detected in ${cradle.cradle_name}`;
+          const emailHtml = `
+            <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px; background-color: #ffffff;">
+              <h2 style="color: #d32f2f; margin-top: 0; border-bottom: 2px solid #d32f2f; padding-bottom: 10px;">Critical Anomaly Alert</h2>
+              
+              <p style="color: #333; font-size: 16px; margin-top: 20px;">Dear Parent,</p>
+              
+              <p style="color: #555; font-size: 16px; line-height: 1.6;">
+                Our monitoring system has detected continuous anomalies in the environment of your SmartCradle device <strong>"${cradle.cradle_name}"</strong>.
+              </p>
+
+              <div style="background-color: #fff5f5; border-left: 4px solid #d32f2f; padding: 15px; margin: 25px 0; border-radius: 4px;">
+                <p style="margin: 0; color: #c62828; font-weight: bold; font-size: 14px; text-transform: uppercase;">Detected Issues</p>
+                <p style="margin: 5px 0 0 0; color: #333; font-size: 18px; font-weight: 500;">
+                  ${issueText}
+                </p>
+              </div>
+
+              <p style="color: #555; font-size: 16px; line-height: 1.6;">
+                Please ensure the baby is safe and check the dashboard for real-time metrics and historical data.
+              </p>
+
+              <div style="text-align: center; margin-top: 35px; margin-bottom: 35px;">
+                <a href="https://smart-cradle-monitor.vercel.app/dashboard" style="background-color: #d32f2f; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 16px; display: inline-block;">
+                  View Live Dashboard
+                </a>
+              </div>
+
+              <hr style="border: 0; border-top: 1px solid #eee; margin: 30px 0;">
+              
+              <p style="color: #999; font-size: 13px; text-align: center; line-height: 1.5;">
+                <strong>SmartCradle Monitoring System</strong><br>
+                Ensuring your baby's safety and comfort.<br>
+                <span style="font-style: italic;">This is an automated message. Please do not reply.</span>
+              </p>
+            </div>
+          `;
+
+          await sendEmail(cradle.email, emailSubject, emailHtml);
         }
       }
     }
