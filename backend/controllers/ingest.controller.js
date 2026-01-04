@@ -90,25 +90,6 @@ export async function ingestLog(req, res) {
                         ${detailedMessage}
                     )
                 `;
-          console.log("In-App Notification Inserted");
-          const payload = {
-            mail: cradle.email,
-            title: `Alert: Anomaly Detected in ${cradle.cradle_name}`,
-            body: `<div><p><strong>High Anomaly Alert</strong></p>
-             <p>Your cradle "<strong>${cradle.cradle_name}</strong>" has reported continuous anomalies.</p>
-             <p><strong>Detected Issues:</strong> ${issueText}</p>
-             <p>Please check the Smart Cradle dashboard for more details.</p></div>`
-          };
-          const response = await axios.post(
-            "https://ramuabsn.app.n8n.cloud/webhook-test/39c231f8-d190-4449-96c9-c80330adb5a9",
-            payload,
-            {
-              headers: {
-                "Content-Type": "application/json"
-              }
-            }
-          );
-          console.log(response.data);
           // Send Email Notification
           await sendEmail(
             cradle.email,
