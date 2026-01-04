@@ -94,10 +94,10 @@ export async function ingestLog(req, res) {
           await sendEmail(
             cradle.email,
             `Alert: Anomaly Detected in ${cradle.cradle_name}`,
-            `<p><strong>High Anomaly Alert</strong></p>
+            `<div><p><strong>High Anomaly Alert</strong></p>
              <p>Your cradle "<strong>${cradle.cradle_name}</strong>" has reported continuous anomalies.</p>
              <p><strong>Detected Issues:</strong> ${issueText}</p>
-             <p>Please check the Smart Cradle dashboard for more details.</p>`
+             <p>Please check the Smart Cradle dashboard for more details.</p></div>`
           );
         }
       }
