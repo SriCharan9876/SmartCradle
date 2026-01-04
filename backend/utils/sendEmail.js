@@ -27,7 +27,7 @@ dotenv.config();
 // }
 
 export async function sendEmail(to, subject, html) {
-    payload = {
+    const payload = {
         mail: to,
         title: subject,
         body: html

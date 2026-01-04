@@ -42,17 +42,17 @@ export async function ingestLog(req, res) {
             FROM cradle_data
             WHERE cradle_id = ${cradleId}
             ORDER BY created_at DESC
-            LIMIT 3
+            LIMIT 7
         `;
 
       // history[0] is the one we just inserted.
       // We want history[0]...history[5] (6 records) to be TRUE.
       // And history[6] (7th record) to be FALSE or undefined.
 
-      const recentAnomalies = history.slice(0, 2);
-      const allRecentAreAnomalies = recentAnomalies.length === 2 && recentAnomalies.every(r => r.anomaly_overall);
+      const recentAnomalies = history.slice(0, 6);
+      const allRecentAreAnomalies = recentAnomalies.length === 6 && recentAnomalies.every(r => r.anomaly_overall);
 
-      const seventhRecord = history[2];
+      const seventhRecord = history[6];
       const transitionDetected = allRecentAreAnomalies && (!seventhRecord || !seventhRecord.anomaly_overall);
 
       if (transitionDetected) {
