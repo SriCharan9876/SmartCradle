@@ -2,8 +2,10 @@ import { sql } from "../config/db.js";
 
 export async function authDevice(req, res, next) {
   const deviceKey = req.headers["x-device-key"];
+  console.log(`[AuthDevice] Device Key: ${deviceKey}`);
 
   if (!deviceKey) {
+    console.warn("[AuthDevice] Missing Key");
     return res.status(401).json({ error: "Device key missing" });
   }
 

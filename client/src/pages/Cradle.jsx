@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { apiFetch } from "../services/api";
+import { useAuth } from "../context/AuthContext";
 import { useParams, Link } from "react-router-dom";
 import {
   Thermometer,
@@ -19,16 +20,44 @@ import { formatDistanceToNow } from "date-fns";
 
 export default function Cradle() {
   const { id } = useParams();
+  const { socket } = useAuth();
   const [data, setData] = useState(null);
 
   useEffect(() => {
     // Initial fetch
     fetchData();
 
-    // Optional: Setup polling every 5 seconds for live updates
-    const interval = setInterval(fetchData, 5000);
+    // Optional: Setup polling every 15 seconds for live updates (fallback)
+    const interval = setInterval(fetchData, 15000);
     return () => clearInterval(interval);
   }, [id]);
+
+  useEffect(() => {
+    if (!socket || !id) return;
+
+    socket.emit("join_cradle", id);
+
+    const handleNewData = (newData) => {
+      // console.log("Real-time update:", newData);
+      setData((prev) => {
+        if (!prev) return newData; // Should rarely happen due to initial fetch
+        return {
+          ...prev,
+          ...newData,
+          // Ensure cradle_name/baby_name/location are preserved if not in newData
+          cradle_name: prev.cradle_name,
+          baby_name: prev.baby_name,
+          location: prev.location
+        };
+      });
+    };
+
+    socket.on("new_data", handleNewData);
+
+    return () => {
+      socket.off("new_data", handleNewData);
+    };
+  }, [socket, id]);
 
   const fetchData = () => {
     apiFetch(`/api/cradles/${id}/latest`).then(setData).catch(console.error);

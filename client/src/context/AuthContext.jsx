@@ -1,11 +1,14 @@
-import { createContext, useContext, useState, useEffect } from "react";
+import { createContext, useContext, useState, useEffect, useRef } from "react";
 import { apiFetch } from "../services/api";
+import { io } from "socket.io-client";
 
 const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [socket, setSocket] = useState(null);
+    const token = localStorage.getItem("token");
 
     useEffect(() => {
         const token = localStorage.getItem("token");
@@ -15,6 +18,29 @@ export function AuthProvider({ children }) {
             setLoading(false);
         }
     }, []);
+
+    useEffect(() => {
+        if (!token || !user) return;
+
+        const newSocket = io(import.meta.env.VITE_API_BASE_URL, {
+            withCredentials: true,
+            auth: { userId: user.id }
+        });
+
+        setSocket(newSocket);
+
+        newSocket.on("connect", () => {
+            console.log("Socket connected");
+        });
+
+        newSocket.on("disconnect", () => {
+            console.log("Socket disconnected");
+        });
+
+        return () => {
+            newSocket.disconnect();
+        };
+    }, [token, user]);
 
     const fetchUser = async () => {
         try {
@@ -40,7 +66,7 @@ export function AuthProvider({ children }) {
     };
 
     return (
-        <AuthContext.Provider value={{ user, loading, login, logout, fetchUser }}>
+        <AuthContext.Provider value={{ user, loading, login, logout, fetchUser, socket }}>
             {children}
         </AuthContext.Provider>
     );

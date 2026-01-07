@@ -7,10 +7,16 @@ import express from "express";
 import authRoutes from "./routes/auth.routes.js";
 import ingestRoutes from "./routes/ingest.routes.js";
 import cradleRoutes from "./routes/cradle.routes.js";
+import { initSocket } from "./config/webSocket.js";
+import { createServer } from "node:http";
+
 
 import notificationRoutes from "./routes/notification.routes.js";
 
 const app = express();
+const server = createServer(app);
+
+initSocket(server);
 
 app.use(cors({
   origin: [
@@ -21,6 +27,11 @@ app.use(cors({
   ]
 }));
 
+app.use((req, res, next) => {
+  console.log(`[Request] ${req.method} ${req.url}`);
+  next();
+});
+
 app.use(express.json());
 
 app.use("/api/auth", authRoutes);
@@ -28,6 +39,6 @@ app.use("/api/ingest", ingestRoutes);
 app.use("/api/cradles", cradleRoutes);
 app.use("/api/notifications", notificationRoutes);
 
-app.listen(5000, () => {
+server.listen(5000, () => {
   console.log("Server running on port 5000");
 });

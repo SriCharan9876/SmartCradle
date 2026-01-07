@@ -1,9 +1,12 @@
 import { sql } from "../config/db.js";
 import { sendEmail } from "../utils/sendEmail.js";
+import axios from "axios";
+import { getIO } from "../config/webSocket.js";
 
 export async function ingestLog(req, res) {
   const cradleId = req.cradleId;
   const data = req.body;
+  console.log(`[Ingest] Received POST for cradleId: ${cradleId}`);
 
   try {
     await sql`
@@ -28,7 +31,22 @@ export async function ingestLog(req, res) {
       )
     `;
 
+    // Emit real-time update
+    try {
+      const io = getIO();
+      console.log(`[Ingest] Emitting new_data to room: cradle_${cradleId}`);
+      io.to(`cradle_${cradleId}`).emit("new_data", {
+        ...data,
+        cradle_id: cradleId,
+        created_at: new Date().toISOString() // Approximate, or fetch from DB if strict
+      });
+    } catch (socketErr) {
+      console.error("Socket emit failed:", socketErr);
+      // Don't block the request if socket fails
+    }
+
     // Check for anomalies and trigger notification if needed
+    // ... existing anomaly logic ...
     // We need to check if we just crossed the threshold of > 5 continuous anomalies.
     // This means the current log (just inserted) is anomalous, and the previous 5 were also anomalous,
     // making a total of 6 continuous anomalies.
