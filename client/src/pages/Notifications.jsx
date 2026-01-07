@@ -1,15 +1,31 @@
 import { useState, useEffect } from "react";
 import { apiFetch } from "../services/api"; // Assuming api service handles auth headers
+import { useAuth } from "../context/AuthContext";
 import { Bell, Check, AlertTriangle, Info } from "lucide-react";
 import { format } from "date-fns";
 
 export default function Notifications() {
+    const { socket } = useAuth();
     const [notifications, setNotifications] = useState([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         fetchNotifications();
     }, []);
+
+    useEffect(() => {
+        if (!socket) return;
+
+        const handleNewNotification = (newNotification) => {
+            setNotifications(prev => [newNotification, ...prev]);
+        };
+
+        socket.on("new_notification", handleNewNotification);
+
+        return () => {
+            socket.off("new_notification", handleNewNotification);
+        };
+    }, [socket]);
 
     const fetchNotifications = async () => {
         try {

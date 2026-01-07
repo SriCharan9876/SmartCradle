@@ -45,24 +45,17 @@ export default function History() {
   }, [id, limit]);
 
   useEffect(() => {
-    console.log("[History] Effect running. Socket:", !!socket, "ID:", id);
     if (!socket || !id) return;
 
-    console.log("[History] Emitting join_cradle for", id);
     socket.emit("join_cradle", id);
 
     const handleNewData = (newData) => {
-      console.log("[History] Received new_data:", newData);
-      setRows((prev) => {
-        console.log("[History] Updating rows. Current count:", prev.length);
-        return [newData, ...prev];
-      });
+      setRows((prev) => [newData, ...prev]);
     };
 
     socket.on("new_data", handleNewData);
 
     return () => {
-      console.log("[History] Cleaning up");
       socket.off("new_data", handleNewData);
     };
   }, [socket, id]);
