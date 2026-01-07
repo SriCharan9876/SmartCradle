@@ -33,11 +33,21 @@ export async function ingestLog(req, res) {
     // Emit real-time update
     try {
       const io = getIO();
+      // 1. Emit full data to the specific cradle room (for Cradle.jsx and History.jsx)
       io.to(`cradle_${cradleId}`).emit("new_data", {
         ...data,
         cradle_id: cradleId,
-        created_at: new Date().toISOString() // Approximate, or fetch from DB if strict
+        created_at: new Date().toISOString()
       });
+
+      // 2. Emit status update to the user's room (for Dashboard.jsx list view)
+      if (req.userId) {
+        io.to(`user_${req.userId}`).emit("cradle_update", {
+          cradle_id: cradleId,
+          anomaly_overall: data.anomaly_overall,
+          last_active: new Date().toISOString()
+        });
+      }
     } catch (socketErr) {
       console.error("Socket emit failed:", socketErr);
       // Don't block the request if socket fails

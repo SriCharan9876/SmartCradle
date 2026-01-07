@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useAuth } from "../context/AuthContext";
 import { apiFetch } from "../services/api";
 import { Link } from "react-router-dom";
 import { format } from "date-fns";
@@ -7,6 +8,7 @@ import CreateCradleModal from "../components/CreateCradleModal";
 import EditCradleModal from "../components/EditCradleModal";
 
 export default function Dashboard() {
+  const { socket } = useAuth();
   const [cradles, setCradles] = useState([]);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [editingCradle, setEditingCradle] = useState(null);
@@ -18,6 +20,29 @@ export default function Dashboard() {
   useEffect(() => {
     fetchCradles();
   }, []);
+
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleCradleUpdate = (update) => {
+      setCradles(prev => prev.map(c => {
+        if (c.id === update.cradle_id) {
+          return {
+            ...c,
+            anomaly_overall: update.anomaly_overall,
+            // optionally update last active time or other fields if sent
+          };
+        }
+        return c;
+      }));
+    };
+
+    socket.on("cradle_update", handleCradleUpdate);
+
+    return () => {
+      socket.off("cradle_update", handleCradleUpdate);
+    };
+  }, [socket]);
 
   return (
     <div className="min-h-screen bg-neutral-900 text-white p-4 md:p-8">

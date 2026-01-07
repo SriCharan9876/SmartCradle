@@ -8,7 +8,7 @@ export async function authDevice(req, res, next) {
   }
 
   const [cradle] = await sql`
-    SELECT id FROM cradles WHERE device_key = ${deviceKey}
+    SELECT id, user_id FROM cradles WHERE device_key = ${deviceKey}
   `;
 
   if (!cradle) {
@@ -16,5 +16,6 @@ export async function authDevice(req, res, next) {
   }
 
   req.cradleId = cradle.id;
+  req.userId = cradle.user_id;
   next();
 }
