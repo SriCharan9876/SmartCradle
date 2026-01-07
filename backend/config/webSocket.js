@@ -27,6 +27,10 @@ export const initSocket = (server) => {
     io.on("connection", (socket) => {
         onlineUsers.set(socket.userId, socket.id);
 
+        // Join user-specific room for private notifications
+        socket.join(`user_${socket.userId}`);
+        console.log(`User ${socket.userId} joined room user_${socket.userId}`);
+
         socket.on("join-public-room", ({ roomId }) => {
             console.log("joined")
             socket.join(roomId);

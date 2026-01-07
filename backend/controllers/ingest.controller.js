@@ -6,7 +6,6 @@ import { getIO } from "../config/webSocket.js";
 export async function ingestLog(req, res) {
   const cradleId = req.cradleId;
   const data = req.body;
-  console.log(`[Ingest] Received POST for cradleId: ${cradleId}`);
 
   try {
     await sql`
@@ -34,7 +33,6 @@ export async function ingestLog(req, res) {
     // Emit real-time update
     try {
       const io = getIO();
-      console.log(`[Ingest] Emitting new_data to room: cradle_${cradleId}`);
       io.to(`cradle_${cradleId}`).emit("new_data", {
         ...data,
         cradle_id: cradleId,
@@ -98,7 +96,7 @@ export async function ingestLog(req, res) {
           const notificationMessage = `Critical anomalies detected: ${issueText}. Please check your cradle immediately.`;
 
           // In-App Notification
-          await sql`
+          const [newNotification] = await sql`
                     INSERT INTO notifications (
                         user_id, cradle_id, type, title, message
                     ) VALUES (
@@ -108,7 +106,16 @@ export async function ingestLog(req, res) {
                         ${notificationTitle},
                         ${notificationMessage}
                     )
+                    RETURNING *
                 `;
+
+          // Emit real-time notification
+          try {
+            const io = getIO();
+            io.to(`user_${cradle.user_id}`).emit("new_notification", newNotification);
+          } catch (socketErr) {
+            console.error("Socket notification emit failed:", socketErr);
+          }
 
           // Send Email Notification - Professional HTML Template
           const emailSubject = `[SmartCradle] Critical Aleart: Anomaly Detected in ${cradle.cradle_name}`;
