@@ -125,6 +125,7 @@ export async function deleteCradle(req, res) {
 }
 
 export async function getStatusByDeviceToken(req, res) {
+  console.log("hi device token");
   const token = req.headers['x-device-token'];
   console.log(token);
 
