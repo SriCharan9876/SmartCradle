@@ -150,5 +150,27 @@ export async function getStatusByDeviceToken(req, res) {
     return res.status(404).json({ error: "Invalid token or cradle not found" });
   }
 
-  res.json(row);
+  // Draft the message
+  let message = `Cradle: ${row.cradle_name || 'Smart Cradle'}. `;
+
+  if (row.anomaly_overall) {
+    if (row.anomaly_temperature) message += `⚠️ High Temp: ${row.temperature}°C. `;
+    if (row.anomaly_humidity) message += `⚠️ Abnormal Humidity: ${row.humidity}%. `;
+    if (row.anomaly_noise) message += `⚠️ High Noise: ${row.sound_level}dB. `;
+    if (row.anomaly_motion) message += `⚠️ Unusual Motion. `;
+    if (!row.anomaly_temperature && !row.anomaly_humidity && !row.anomaly_noise && !row.anomaly_motion) {
+      message += `⚠️ Anomaly Detected. `;
+    }
+  } else {
+    message += `Status: Normal. `;
+    if (row.temperature) message += `T:${row.temperature.toFixed(1)}°C, `;
+    if (row.humidity) message += `H:${row.humidity.toFixed(1)}%. `;
+  }
+
+  // Add baby status if available
+  if (row.motion_state) {
+    message += `Baby: ${row.motion_state}.`;
+  }
+
+  res.json({ message: message.trim() });
 }
