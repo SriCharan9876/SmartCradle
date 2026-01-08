@@ -126,6 +126,7 @@ export async function deleteCradle(req, res) {
 
 export async function getStatusByDeviceToken(req, res) {
   const token = req.headers['x-device-token'];
+  console.log(token);
 
   if (!token) {
     return res.status(401).json({ error: "Missing device token" });
