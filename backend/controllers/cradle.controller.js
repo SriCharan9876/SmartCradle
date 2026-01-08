@@ -151,26 +151,27 @@ export async function getStatusByDeviceToken(req, res) {
   }
 
   // Draft the message
-  let message = `Cradle: ${row.cradle_name || 'Smart Cradle'}. `;
+  let lines = [];
+  lines.push(`Cradle: ${row.cradle_name || 'Smart Cradle'}`);
 
   if (row.anomaly_overall) {
-    if (row.anomaly_temperature) message += `⚠️ High Temp: ${row.temperature}°C. `;
-    if (row.anomaly_humidity) message += `⚠️ Abnormal Humidity: ${row.humidity}%. `;
-    if (row.anomaly_noise) message += `⚠️ High Noise: ${row.sound_level}dB. `;
-    if (row.anomaly_motion) message += `⚠️ Unusual Motion. `;
+    if (row.anomaly_temperature) lines.push(`⚠️ High Temp: ${row.temperature}°C`);
+    if (row.anomaly_humidity) lines.push(`⚠️ Abnormal Humidity: ${row.humidity}%`);
+    if (row.anomaly_noise) lines.push(`⚠️ High Noise: ${row.sound_level}dB`);
+    if (row.anomaly_motion) lines.push(`⚠️ Unusual Motion`);
     if (!row.anomaly_temperature && !row.anomaly_humidity && !row.anomaly_noise && !row.anomaly_motion) {
-      message += `⚠️ Anomaly Detected. `;
+      lines.push(`⚠️ Anomaly Detected`);
     }
   } else {
-    message += `Status: Normal. `;
-    if (row.temperature) message += `T:${row.temperature.toFixed(1)}°C, `;
-    if (row.humidity) message += `H:${row.humidity.toFixed(1)}%. `;
+    lines.push(`Status: Normal`);
+    if (row.temperature) lines.push(`T:${row.temperature.toFixed(1)}°C`);
+    if (row.humidity) lines.push(`H:${row.humidity.toFixed(1)}%`);
   }
 
   // Add baby status if available
   if (row.motion_state) {
-    message += `Baby: ${row.motion_state}.`;
+    lines.push(`Baby: ${row.motion_state}`);
   }
 
-  res.json({ message: message.trim() });
+  res.json({ message: lines.join('\n') });
 }
