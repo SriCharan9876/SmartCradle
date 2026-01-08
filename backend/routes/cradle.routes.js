@@ -13,7 +13,7 @@ import {
 const router = express.Router();
 
 router.post("/", authUser, createCradle);
-router.get("/device/status", getStatusByDeviceToken);
+router.post("/device/status", getStatusByDeviceToken);
 router.get("/", authUser, getCradles);
 router.get("/:cradleId/latest", authUser, getLatestStatus);
 router.get("/:cradleId/history", authUser, getHistory);
