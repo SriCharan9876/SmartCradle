@@ -120,5 +120,33 @@ export async function deleteCradle(req, res) {
     return res.status(404).json({ error: "Cradle not found or unauthorized" });
   }
 
+
   res.json({ message: "Cradle deleted successfully", id: deletedCradle.id });
+}
+
+export async function getStatusByDeviceToken(req, res) {
+  const token = req.headers['x-device-token'];
+
+  if (!token) {
+    return res.status(401).json({ error: "Missing device token" });
+  }
+
+  const [row] = await sql`
+    SELECT c.cradle_name, c.baby_name, c.location, cd.*
+    FROM cradles c
+    LEFT JOIN LATERAL (
+      SELECT *
+      FROM cradle_data
+      WHERE cradle_id = c.id
+      ORDER BY created_at DESC
+      LIMIT 1
+    ) cd ON true
+    WHERE c.device_key = ${token}
+  `;
+
+  if (!row) {
+    return res.status(404).json({ error: "Invalid token or cradle not found" });
+  }
+
+  res.json(row);
 }
