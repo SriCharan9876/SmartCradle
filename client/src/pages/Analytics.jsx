@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { apiFetch } from "../services/api";
+import { useAuth } from "../context/AuthContext";
 import { useParams, useNavigate } from "react-router-dom";
 import {
     AreaChart,
@@ -32,6 +33,7 @@ import { format } from "date-fns";
 
 export default function Analytics() {
     const { id } = useParams();
+    const { socket } = useAuth();
     const navigate = useNavigate();
     const [data, setData] = useState([]);
     const [cradleName, setCradleName] = useState("");
@@ -45,50 +47,81 @@ export default function Analytics() {
         return () => clearTimeout(timer);
     }, []);
 
+    // Helper: Process a single data point
+    const processDataPoint = (item) => {
+        const getMotionValue = (state) => {
+            switch (state?.toLowerCase()) {
+                case 'idle': return 0;
+                case 'normal': return 1;
+                case 'shake': return 2;
+                case 'tilt': return 3;
+                default: return 0;
+            }
+        };
+
+        return {
+            ...item,
+            time: format(new Date(item.created_at), "HH:mm"),
+            fullDate: new Date(item.created_at).toLocaleString(),
+            motionStateValue: getMotionValue(item.motion_state)
+        };
+    };
+
+    // Socket Integration
     useEffect(() => {
-        const fetchData = async () => {
+        if (!socket || !id) return;
+
+        socket.emit("join_cradle", id);
+
+        const handleNewData = (newItem) => {
+            setData(prev => {
+                const processed = processDataPoint(newItem);
+                // Keep last 200 points to match initial fetch limit and prevent memory issues
+                const newData = [...prev, processed];
+                if (newData.length > 200) return newData.slice(-200);
+                return newData;
+            });
+        };
+
+        socket.on("new_data", handleNewData);
+
+        return () => {
+            socket.off("new_data", handleNewData);
+        };
+    }, [socket, id]);
+
+    // Calculate Anomaly Stats whenever data changes
+    useEffect(() => {
+        if (!data.length) return;
+
+        let tempCount = 0, humCount = 0, noiseCount = 0, motionCount = 0;
+        data.forEach(d => {
+            if (d.anomaly_temperature) tempCount++;
+            if (d.anomaly_humidity) humCount++;
+            if (d.anomaly_noise) noiseCount++;
+            if (d.anomaly_motion) motionCount++;
+        });
+
+        setAnomalyStats([
+            { name: 'Temperature', value: tempCount, color: '#f43f5e' },
+            { name: 'Humidity', value: humCount, color: '#0ea5e9' },
+            { name: 'Noise', value: noiseCount, color: '#a855f7' },
+            { name: 'Motion', value: motionCount, color: '#f97316' },
+        ].filter(item => item.value > 0));
+    }, [data]);
+
+    useEffect(() => {
+        const fetchInitialData = async () => {
             try {
                 const [historyData, latestData] = await Promise.all([
                     apiFetch(`/api/cradles/${id}/history?limit=200`),
                     apiFetch(`/api/cradles/${id}/latest`)
                 ]);
 
-                // Map motion states to numerical values for charting
-                const getMotionValue = (state) => {
-                    switch (state?.toLowerCase()) {
-                        case 'idle': return 0;
-                        case 'normal': return 1;
-                        case 'shake': return 2;
-                        case 'tilt': return 3;
-                        default: return 0;
-                    }
-                };
+                // Process initial history
+                const processedHistory = historyData.map(processDataPoint).reverse();
+                setData(processedHistory);
 
-                // Process data for charts
-                const processedData = historyData.map(item => ({
-                    ...item,
-                    time: format(new Date(item.created_at), "HH:mm"),
-                    fullDate: new Date(item.created_at).toLocaleString(),
-                    motionStateValue: getMotionValue(item.motion_state)
-                })).reverse();
-
-                // Calculate Anomaly Stats
-                let tempCount = 0, humCount = 0, noiseCount = 0, motionCount = 0;
-                processedData.forEach(d => {
-                    if (d.anomaly_temperature) tempCount++;
-                    if (d.anomaly_humidity) humCount++;
-                    if (d.anomaly_noise) noiseCount++;
-                    if (d.anomaly_motion) motionCount++;
-                });
-
-                setAnomalyStats([
-                    { name: 'Temperature', value: tempCount, color: '#f43f5e' }, // Rose
-                    { name: 'Humidity', value: humCount, color: '#0ea5e9' },    // Sky
-                    { name: 'Noise', value: noiseCount, color: '#a855f7' },     // Purple
-                    { name: 'Motion', value: motionCount, color: '#f97316' },   // Orange
-                ].filter(item => item.value > 0)); // Only show types that have occurrences
-
-                setData(processedData);
                 if (latestData) setCradleName(latestData.cradle_name);
             } catch (error) {
                 console.error("Failed to fetch analytics data", error);
@@ -97,7 +130,7 @@ export default function Analytics() {
             }
         };
 
-        fetchData();
+        fetchInitialData();
     }, [id]);
 
     if (loading || !mounted) {
